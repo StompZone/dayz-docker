@@ -5,9 +5,9 @@ set -eEa
 # If you want/need the server and rcon ports to be different, set them here.
 # The steam query port is set in serverDZ.cfg.
 
-# Server port
-port=2302
-rcon_port=2303
+# Server port. Set these in the .env file for the container.
+port=${SERVER_PORT}
+rcon_port=${RCON_PORT}
 
 # Don't change anything else.
 

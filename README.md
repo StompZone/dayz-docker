@@ -30,12 +30,33 @@ git clone https://ceregatti.org/git/daniel/dayzdockerserver.git
 cd dayzdockerserver
 ```
 
-Create a `.env` file that contains your user id. Usually the `${UID}` shell variable has this:
+Create a `.env` file for the web container that contains your user id. Usually the `${UID}` shell variable has this:
 
 ```shell
 echo "export USER_ID=${UID}" | tee .env
 ```
 
+Repeat the above for server1, which uses .env1 (and so on):
+```shell
+echo "export USER_ID=${UID}" | tee .env1
+```
+
+But each server must also set its own unique ports:
+```shell
+echo "export SERVER_PORT=2302" | tee -a .env1
+echo "export RCON_PORT=2303" | tee -a .env1
+echo "export STEAM_PORT=27016" | tee -a .env1
+```
+
+Repeat the above for each server you want to run, making sure the ports are unique across all servers:
+```shell
+echo "export USER_ID=${UID}" | tee .env2
+echo "export SERVER_PORT=2312" | tee -a .env2
+echo "export RCON_PORT=2313" | tee -a .env2
+echo "export STEAM_PORT=27116" | tee -a .env2
+
+
+```shell
 Build the Docker images:
 
 ```shell
@@ -76,7 +97,7 @@ hostname = "Something other than Server Name";   // Server name
 Install the server config file:
 
 ```shell
-docker compose run --rm server dz c
+docker compose run --rm server1 dz c
 ```
 
 The maintenance of the config file is a work in progress. The goal is to create a facility for merging changes into the config file and maintain a paper trail of changes.
@@ -86,18 +107,18 @@ Launch the stack into the background:
 docker compose up -d
 ```
 
-There will be nothing in mpmissions when the server container starts for the first time. A pristine copy of `dayzOffline.chernarusplus` will be copied from the `mpmission` volume to the server container. This will be the default map. To install other maps, see [Maps](#maps).
+There will be nothing in mpmissions when a server container starts for the first time. A pristine copy of `dayzOffline.chernarusplus` will be copied from the `mpmission` volume to the server container. This will be the default map. To install other maps, see [Maps](#maps).
 
 To see the server log:
 
 ```shell
-docker compose logs -f server
+docker compose logs -f server1
 ```
 ## Stopping the server
 
 To stop the DayZ server:
 ```shell
-docker compose exec server dz stop
+docker compose exec server1 dz stop
 ```
 
 If it exits cleanly, the container will also stop. Otherwise a crash is presumed and the server will restart. Ideally, the server would always exit cleanly, but... it's DayZ.
@@ -126,13 +147,13 @@ A terminal-based RCON client is included: https://github.com/indepth666/py3rcon.
 The dz script manages what's necessary to configure and run it:
 
 ```shell
-docker compose exec server dz rcon
+docker compose exec server1 dz rcon
 ```
 
 To reset the RCON password in the Battle Eye configuration file, simply delete it, and a random one will be generated on the next server startup:
 
 ```shell
-docker compose run --rm server rm serverfiles/battleye/baserver_x64_active*
+docker compose run --rm server1 rm serverfiles/battleye/baserver_x64_active*
 ```
 
 Don't expect much from this RCON at this time.
@@ -159,13 +180,13 @@ Don't forget to [bring it back up](#run).
 
 To stop the server:
 ```shell
-docker compose exec server dz stop
+docker compose exec server1 dz stop
 ```
 
 The above sends the SIGINT signal to the server process. The server sometimes fails to stop with this signal. It may be necessary to force stop it with the SIGKILL:
 
 ```shell
-docker compose exec server dz force
+docker compose exec server1 dz force
 ```
 
 When the server exits cleanly, i.e. exit code 0, the container also stops. Otherwise, a crash is presumed, and the server will be automatically restarted.
@@ -180,8 +201,8 @@ docker compose down
 Interactive interface for managing mods. 
 
 ```
-docker compose exec server dz activate id | add id1 | deactivate id | list | modupdate | remove id
-docker compose exec server dz a id | add id1 | d id | l | m | r id
+docker compose exec server1 dz activate id | add id1 | deactivate id | list | modupdate | remove id
+docker compose exec server1 dz a id | add id1 | d id | l | m | r id
 ```
 
 Look for mods in the [DayZ Workshop](https://steamcommunity.com/app/221100/workshop/). Browse to one. In its URL will be
@@ -232,9 +253,7 @@ This allows access to the server container using exec. You can then start and st
 
 ```shell
 # Go into the server container
-docker compose exec shell bash
-# Because this is now in the environment and keeping the server from starting, it'd still keep the server from starting unless we unset it
-unset DEVELOPMENT
+docker compose exec server1 bash
 # See what the server status is
 dz s
 # Start it
