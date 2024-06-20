@@ -113,14 +113,16 @@ get_mod_id(){
 	fi
 	# If we have a second argument, we want to iterate over active server mods
 	DIR=${SERVER_FILES}
+	ARG="-d"
 	if [[ ${2} = "0" ]]
 	then
+		ARG="-tdr"
 		DIR=${SERVER_PROFILE}
 	fi
 #	echo "DIR: ${DIR}, ARG: ${ARG}" >&2
 	X=1
 	# Loop over mods
-	for link in "${DIR}"/@*
+	for link in $(ls ${ARG} ${DIR}/@* 2> /dev/null)
 	do
 		ID=$(readlink ${link} | awk -F/ '{print $NF}')
 		if [[ "${X}" = "${1}" ]]
@@ -145,7 +147,7 @@ get_mods(){
 
 get_mod_command_line(){
 	mod_command_line=""
-	for link in "${SERVER_PROFILE}"/@*
+	for link in $(ls -tdr ${SERVER_PROFILE}/@* 2> /dev/null)
 	do
 		ID=$(readlink ${link} | awk -F/ '{print $NF}')
 		MODNAME=$(get_mod_name ${ID})
