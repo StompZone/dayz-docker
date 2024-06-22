@@ -18,6 +18,9 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install --no-install-reco
     procps \
     steamcmd
 
+# Add steamcmd to the PATH
+ENV PATH="/usr/games:${PATH}"
+
 # Setup a non-privileged user
 ARG USER_ID
 
