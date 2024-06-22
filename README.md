@@ -64,7 +64,7 @@ user@dayzdockerserver:~ $
 Use [SteamCMD](https://developer.valvesoftware.com/wiki/SteamCMD) to login:
 
 ```docker
-steamcmd +login 'MySteamLogin' +force_install_dir /home/user/dayz/serverfiles  +quit
+steamcmd +login 'MySteamLogin' +quit
 ```
 
 Follow the prompts for the password and Steam Guard code. This process will wait indefinitely until both are entered. Once logged in, this process will not need to be repeated as long as the same username is used for the +login argument and the host directory containing the files is not deleted.
