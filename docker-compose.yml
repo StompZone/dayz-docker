@@ -6,7 +6,7 @@ services:
         - USER_ID
     user: ${USER_ID}
     volumes:
-      - ./dayz:/home/user
+      - ~/dayz:/home/user
     network_mode: host
     # The above is mutually exclusive with the below. If you don't need
     # the server to show up on the LAN, comment out the network_mode above
