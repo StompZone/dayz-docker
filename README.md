@@ -10,7 +10,7 @@ This branch is called `simple`, because that's the intent: To keep things simple
 
 * A Debian slim image with `steamcmd` and enough utilities installed to run a DayZ server.
 * All server and steamcmd files are persisted in the host user's home directory using a bind mount.
-* Everything else is left to the user to run by hand using commands similar to the official documentation.
+* Everything else is left to the user to run by hand using commands similar to the [official documentation](https://community.bistudio.com/wiki/DayZ:Hosting_a_Linux_Server).
 
 ## TL;DR
 
@@ -27,10 +27,10 @@ docker compose exec dayz bash
 ```docker
 export STEAM_USERNAME='MySteamUserName'
 steamcmd +login "${STEAM_USERNAME}" +quit
-steamcmd +login "${STEAM_USERNAME}" +force_install_dir /home/user/dayz/serverfiles +app_update 223350 validate +quit
-nano /home/user/dayz/serverfiles/serverDZ.cfg
-cd /home/user/dayz/serverfiles
-./DayZServer -config=serverDZ.cfg
+steamcmd +login "${STEAM_USERNAME}" +force_install_dir /home/user/serverfiles +app_update 223350 validate +quit
+nano /home/user/serverfiles/serverDZ.cfg
+cd /home/user/serverfiles
+./DayZServer -config=serverDZ.cfg -port=2302 -BEpath=battleye -profiles=profiles -dologs -adminlog -netlog -freezecheck
 ```
 
 ## Configure and Build
