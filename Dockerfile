@@ -6,7 +6,8 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
 # Install only the necessary packages
 RUN apt-get update && apt-get -y upgrade && apt-get -y install --no-install-recommends \
     nano \
-    procps
+    procps \
+    steamcmd
 
 # Setup a non-privileged user
 ARG USER_ID
