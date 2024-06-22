@@ -41,8 +41,9 @@ Repeat the above for server1, which uses .env1 (and so on):
 echo "export USER_ID=${UID}" | tee .env1
 ```
 
-But each server must also set its own unique ports:
+But each server must also set its own unique ports and id:
 ```shell
+echo "export SERVER_ID=1" | tee -a .env1
 echo "export SERVER_PORT=2302" | tee -a .env1
 echo "export RCON_PORT=2303" | tee -a .env1
 echo "export STEAM_PORT=27016" | tee -a .env1
@@ -51,6 +52,7 @@ echo "export STEAM_PORT=27016" | tee -a .env1
 Repeat the above for each server you want to run, making sure the ports are unique across all servers:
 ```shell
 echo "export USER_ID=${UID}" | tee .env2
+echo "export SERVER_ID=2" | tee -a .env2
 echo "export SERVER_PORT=2312" | tee -a .env2
 echo "export RCON_PORT=2313" | tee -a .env2
 echo "export STEAM_PORT=27116" | tee -a .env2
