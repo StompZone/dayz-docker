@@ -3,7 +3,7 @@
 # Set PS1 so we know we're in the container, should we exec into it.
 cat > .bashrc <<EOF
 alias ls='ls --color'
-export PS1="${debian_chroot:+($debian_chroot)}\u@dz-server:\w\$ "
+export PS1="${debian_chroot:+($debian_chroot)}\u@dz-server${SERVER_ID}:\w\$ "
 unset DEVELOPMENT
 EOF
 
