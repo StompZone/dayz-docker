@@ -1,9 +1,0 @@
-{
-  "PlayerData":{
-    "spawnGearPresetFiles": [
-      "custom_starting-gear/medic.json",
-      "custom_starting-gear/military.json",
-      "custom_starting-gear/vanilla.json"
-    ]
-  }
-}
