@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
 
-# Set PS1 so we know we're in the container, should we exec into it.
+trap '
+	echo "Caught signal, shutting down."
+	exit 0
+' SIGTERM SIGINT
+
+# Set PS1 so we know we're in the container
 cat > .bashrc <<EOF
 alias ls='ls --color'
-export PS1='\[\e]0;\u@\h: \w\a\]\${debian_chroot:+(\$debian_chroot)}\[\033[01;35m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;33m\]\$(parse_git_branch)\[\033[00m\]\$ '"
+export PS1='\[\033[01;35m\]\u@dayzdockerserver\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;33m\]\\[\033[00m\]\$ '
 EOF
 
 # Block the container from exiting
-exec tail -f /dev/null
+tail -f /dev/null &
+wait $!
