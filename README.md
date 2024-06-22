@@ -31,6 +31,12 @@ Create a `.env` file that contains your user id. The output of `id -u` has it:
 echo "export USER_ID=$(id -u)" | tee .env
 ```
 
+Create the directory where the server files will be stored:
+
+```shell
+mkdir dayz
+```
+
 Build the Docker image and bring the container up in the background:
 
 ```shell
