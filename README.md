@@ -8,10 +8,30 @@ The goal is to provide a vanilla DayZ server that can be spun up with as little 
 
 This branch is called `simple`, because that's the intent: To keep things simple:
 
-* One container. The server runs in the same container used to manage it.
-* One local bind mount. All files are stored in a directory on the host machine.
-* No root requirement. The container and its files are owned by the host user and kept entirely in that user's home directory.
-* Everything is left to the user to run by hand using commands similar to the official documentation.
+* A Debian slim image with `steamcmd` and enough utilities installed to run a DayZ server.
+* All server and steamcmd files are persisted in the host user's home directory using a bind mount.
+* Everything else is left to the user to run by hand using commands similar to the official documentation.
+
+## TL;DR
+
+```shell
+git clone https://ceregatti.org/git/daniel/dayzdockerserver.git
+cd dayzdockerserver
+git checkout simple
+echo "export USER_ID=$(id -u)" | tee .env
+mkdir dayz
+docker compose up -d --build
+docker compose exec dayz bash
+```
+
+```docker
+export STEAM_USERNAME='MySteamUserName'
+steamcmd +login "${STEAM_USERNAME}" +quit
+steamcmd +login "${STEAM_USERNAME}" +force_install_dir /home/user/dayz/serverfiles +app_update 223350 validate +quit
+nano /home/user/dayz/serverfiles/serverDZ.cfg
+cd /home/user/dayz/serverfiles
+./DayZServer -config=serverDZ.cfg
+```
 
 ## Configure and Build
 
@@ -111,10 +131,24 @@ cd /home/user/dayz/serverfiles
 
 ## Stop
 
-```docker
-# Hit control c to stop the server in the shell where it's running in the foreground.
-```
+Hit control c to stop the server in the shell where it's running in the foreground.
 
 Otherwise, open a new shell in the container and kill the process:
 
 ```docker
+kill -TERM $(pidof DayZServer)
+```
+
+It takes time for the server to wrap things up, so always give it at least 30 seconds to fully shut down.
+
+If the process does not exit, which it some times does, then you have to kill it:
+
+```docker
+kill -KILL $(pidof DayZServer)
+```
+
+Otherwise just bring the stack down. That will kill the server process as well:
+
+```shell
+docker compose down
+```

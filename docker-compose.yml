@@ -5,12 +5,16 @@ services:
       args:
         - USER_ID
     user: ${USER_ID}
+    # All container persistence is done using a bind mount that maps to the container's home directory.
+    # Here the default is a directory named dayz in the host user's home directory. Change this to suit your needs.
+    # For proper docker permissions, the host directory must exist before the container first starts and be owned by
+    # the host user.
     volumes:
       - ~/dayz:/home/user
+    # The server must run in host mode if you want it to show up on the LAN
     network_mode: host
-    # The above is mutually exclusive with the below. If you don't need
-    # the server to show up on the LAN, comment out the network_mode above
-    # and uncomment the port mappings below.
+    # The network_mode above is mutually exclusive with the ports section below. If you don't need the server to show
+    # up on the LAN, comment out the network_mode above and uncomment the lines below.
     #    ports:
     #       # Game port
     #      - 2302:2302/udp
