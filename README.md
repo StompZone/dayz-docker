@@ -106,7 +106,7 @@ Start the server:
 
 ```docker
 cd /home/user/dayz/serverfiles
-./DayZServer_x64 -config=serverDZ.cfg
+./DayZServer -config=serverDZ.cfg
 ```
 
 ## Stop
