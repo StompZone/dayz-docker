@@ -25,10 +25,10 @@ cd dayzdockerserver
 git checkout simple
 ```
 
-Create a `.env` file that contains your user id. The output of `id` has it:
+Create a `.env` file that contains your user id. The output of `id -u` has it:
 
 ```shell
-echo "export USER_ID=$(id)" | tee .env
+echo "export USER_ID=$(id -u)" | tee .env
 ```
 
 Build the Docker image and bring the container up in the background:
