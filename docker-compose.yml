@@ -13,12 +13,15 @@ volumes:
   # For Steam, for now
   homedir_server1:
   homedir_server2:
+  homedir_server3:
   # Server mission files
   mpmissions1:
   mpmissions2:
+  mpmissions3:
   # Server profile files
   profiles1:
   profiles2:
+  profiles3:
 
 services:
 
@@ -109,3 +112,25 @@ services:
     restart: no
     env_file:
       - .env2 # <-- here
+
+  server3: # <-- here
+    build:
+      context: server
+      args:
+        - USER_ID
+    user: ${USER_ID}
+    volumes:
+      # Common volumes
+      - ./files:/files
+      - mods:/mods
+      - ./server:/server
+      - serverfiles:/serverfiles
+      - servermpmissions:/mpmissions:ro
+      # Server-specific volumes
+      - homedir_server3:/home/user # <-- here
+      - mpmissions3:/serverfiles/mpmissions # <-- here
+      - profiles3:/profiles # <-- here
+    network_mode: host
+    restart: no
+    env_file:
+      - .env3 # <-- here
