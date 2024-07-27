@@ -1,22 +1,33 @@
 volumes:
-  # For steamcmd files and resource files used by the scripts
+  # Only in the web container.
+  # For steamcmd files and resource files used by the scripts.
   homedir_main:
-  # For Steam, for now
-  homedir_server:
+  # Shared by all containers.
+  # Mods.
+  mods:
   # Where the server files will be installed
   serverfiles:
-  # Server profile files
-  profiles:
   # Upstream mission files
   servermpmissions:
+  # Server-specific volumes
+  # For Steam, for now
+  homedir_server1:
+  homedir_server2:
+  homedir_server3:
   # Server mission files
-  mpmissions:
-  # Mods
-  mods:
+  mpmissions1:
+  mpmissions2:
+  mpmissions3:
+  # Server profile files
+  profiles1:
+  profiles2:
+  profiles3:
 
 services:
 
   web:
+    profiles:
+      - main
     build:
       context: web
       args:
@@ -37,21 +48,35 @@ services:
     env_file:
       - .env
 
-  server:
+  server-image:
+    &server-image
+    profiles:
+      - build
     build:
       context: server
       args:
         - USER_ID
+    image: server-image
+    pull_policy: never
+    env_file:
+      - .env
+
+  server1:
+    <<: *server-image
+    profiles:
+      - main
     user: ${USER_ID}
     volumes:
-      - homedir_server:/home/user
+      # Common volumes
+      - ./files:/files
+      - mods:/mods
+      - ./server:/server
       - serverfiles:/serverfiles
       - servermpmissions:/mpmissions:ro
-      - mods:/mods
-      - mpmissions:/serverfiles/mpmissions
-      - profiles:/profiles
-      - ./files:/files
-      - ./server:/server
+      # Server-specific volumes
+      - homedir_server1:/home/user
+      - mpmissions1:/serverfiles/mpmissions
+      - profiles1:/profiles
     # To have the server show up in the LAN tab of the DayZ launcher,
     # it must run under host mode.
     network_mode: host
@@ -77,4 +102,49 @@ services:
 #        soft: -1
 #        hard: -1
     env_file:
-      - .env
+      - .env1
+
+#  # Copy and paste this for every other server you want to run, replacing 2 with 3, and so on.
+#  server2: # <-- here
+#    build:
+#      context: server
+#      args:
+#        - USER_ID
+#    user: ${USER_ID}
+#    volumes:
+#      # Common volumes
+#      - ./files:/files
+#      - mods:/mods
+#      - ./server:/server
+#      - serverfiles:/serverfiles
+#      - servermpmissions:/mpmissions:ro
+#      # Server-specific volumes
+#      - homedir_server2:/home/user # <-- here
+#      - mpmissions2:/serverfiles/mpmissions # <-- here
+#      - profiles2:/profiles # <-- here
+#    network_mode: host
+#    restart: no
+#    env_file:
+#      - .env2 # <-- here
+#
+#  server3: # <-- here
+#    build:
+#      context: server
+#      args:
+#        - USER_ID
+#    user: ${USER_ID}
+#    volumes:
+#      # Common volumes
+#      - ./files:/files
+#      - mods:/mods
+#      - ./server:/server
+#      - serverfiles:/serverfiles
+#      - servermpmissions:/mpmissions:ro
+#      # Server-specific volumes
+#      - homedir_server3:/home/user # <-- here
+#      - mpmissions3:/serverfiles/mpmissions # <-- here
+#      - profiles3:/profiles # <-- here
+#    network_mode: host
+#    restart: no
+#    env_file:
+#      - .env3 # <-- here
