@@ -26,6 +26,8 @@ volumes:
 services:
 
   web:
+    profiles:
+      - main
     build:
       context: web
       args:
@@ -46,11 +48,23 @@ services:
     env_file:
       - .env
 
-  server1:
+  server-image:
+    &server-image
+    profiles:
+      - build
     build:
       context: server
       args:
         - USER_ID
+    image: server-image
+    pull_policy: never
+    env_file:
+      - .env
+
+  server1:
+    <<: *server-image
+    profiles:
+      - main
     user: ${USER_ID}
     volumes:
       # Common volumes
@@ -90,47 +104,47 @@ services:
     env_file:
       - .env1
 
-  # Copy and paste this for every other server you want to run, replacing 2 with 3, and so on.
-  server2: # <-- here
-    build:
-      context: server
-      args:
-        - USER_ID
-    user: ${USER_ID}
-    volumes:
-      # Common volumes
-      - ./files:/files
-      - mods:/mods
-      - ./server:/server
-      - serverfiles:/serverfiles
-      - servermpmissions:/mpmissions:ro
-      # Server-specific volumes
-      - homedir_server2:/home/user # <-- here
-      - mpmissions2:/serverfiles/mpmissions # <-- here
-      - profiles2:/profiles # <-- here
-    network_mode: host
-    restart: no
-    env_file:
-      - .env2 # <-- here
-
-  server3: # <-- here
-    build:
-      context: server
-      args:
-        - USER_ID
-    user: ${USER_ID}
-    volumes:
-      # Common volumes
-      - ./files:/files
-      - mods:/mods
-      - ./server:/server
-      - serverfiles:/serverfiles
-      - servermpmissions:/mpmissions:ro
-      # Server-specific volumes
-      - homedir_server3:/home/user # <-- here
-      - mpmissions3:/serverfiles/mpmissions # <-- here
-      - profiles3:/profiles # <-- here
-    network_mode: host
-    restart: no
-    env_file:
-      - .env3 # <-- here
+#  # Copy and paste this for every other server you want to run, replacing 2 with 3, and so on.
+#  server2: # <-- here
+#    build:
+#      context: server
+#      args:
+#        - USER_ID
+#    user: ${USER_ID}
+#    volumes:
+#      # Common volumes
+#      - ./files:/files
+#      - mods:/mods
+#      - ./server:/server
+#      - serverfiles:/serverfiles
+#      - servermpmissions:/mpmissions:ro
+#      # Server-specific volumes
+#      - homedir_server2:/home/user # <-- here
+#      - mpmissions2:/serverfiles/mpmissions # <-- here
+#      - profiles2:/profiles # <-- here
+#    network_mode: host
+#    restart: no
+#    env_file:
+#      - .env2 # <-- here
+#
+#  server3: # <-- here
+#    build:
+#      context: server
+#      args:
+#        - USER_ID
+#    user: ${USER_ID}
+#    volumes:
+#      # Common volumes
+#      - ./files:/files
+#      - mods:/mods
+#      - ./server:/server
+#      - serverfiles:/serverfiles
+#      - servermpmissions:/mpmissions:ro
+#      # Server-specific volumes
+#      - homedir_server3:/home/user # <-- here
+#      - mpmissions3:/serverfiles/mpmissions # <-- here
+#      - profiles3:/profiles # <-- here
+#    network_mode: host
+#    restart: no
+#    env_file:
+#      - .env3 # <-- here
