@@ -7,19 +7,11 @@
  but to also make them available for the creation of server containers.
  */
 import express from 'express'
+import ViteExpress from 'vite-express'
 import path from 'path'
 import fs from 'fs'
 import https from 'https'
 import { spawn } from 'child_process'
-
-const app = express()
-
-app.use((req, res, next) => {
-    res.append('Access-Control-Allow-Origin', ['*'])
-    res.append('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
-    res.append('Access-Control-Allow-Headers', 'Content-Type')
-    next()
-})
 
 /*
  The DayZ server Steam app ID. USE ONE OR THE OTHER!!
@@ -28,12 +20,12 @@ app.use((req, res, next) => {
  Meanwhile, if we have a release-compatible binary, the base files must be installed from this id,
  even if the server binary and required shared objects don't come from it. (They'd come from...elsewhere...)
  */
-//const server_appid = "223350"
+const server_appid = "223350"
 
 /*
  Without a release binary, we must use the experimental server app ID.
  */
-const server_appid = "1042420"
+// const server_appid = "1042420"
 
 /*
  DayZ release client Steam app ID. This is for mods, as only the release client has them.
@@ -54,6 +46,7 @@ const appid_version = versions[server_appid]
  */
 const modDir = "/mods"
 const serverFiles = "/serverfiles"
+const homeDir = "/home/user"
 
 /*
  File path delimiter
@@ -115,16 +108,14 @@ const allConfigFiles = {
 
 const config = {
     installFile: serverFiles + "/DayZServer",
+    loginFile: homeDir + "/steamlogin",
     modDir: modDir + "/" + client_appid,
     port: 8000,
     steamAPIKey: process.env["STEAMAPIKEY"]
 }
 
-const getVersion = (installed) => {
-    if(installed) {
-        return "1.22.bogus"
-    }
-    return ""
+const getVersion = () => {
+    return "1.25.bogus"
 }
 
 const getDirSize = (dirPath) => {
@@ -175,29 +166,77 @@ const getMods = () => {
     return mods
 }
 
-const login = () => {
-    const args = "+force_install_dir " + serverFiles + " +login '" + config.steamLogin + "' +quit"
-    steamcmd(args)
-}
-
-const steamcmd = (args) => {
-    const proc = spawn('steamcmd ' + args)
+const steamcmd = async (args) => {
+    let out = ''
+    let err = ''
+    const command = 'steamcmd +force_install_dir ' + serverFiles + ' ' + args + ' +quit'
+    // console.log(command)
+    const proc = spawn(command, {shell: true})
     proc.stdout.on('data', (data) => {
-        res.write(data)
+        // console.log("[OUT] " + data)
+        out += data + "\n"
     })
     proc.stderr.on('data', (data) => {
-        res.write(data)
+        // console.log("[ERROR] " + data)
+        err += data + "\n"
     })
     proc.on('error', (error) => {
-        res.write(error)
+        // console.log("[ERROR] " + error)
+        err += error + "\n"
     })
     proc.on('close', (error) => {
-        if(error) res.write(error)
-        res.end()
+        if(error) err += error
+        // console.log("Return")
+        return { out: out, err: err }
     })
 }
 
-app.use(express.static('root'))
+const app = express()
+
+app.use(express.json())
+app.use(express.urlencoded({extended: true}))
+
+app.disable('etag')
+
+app.use((req, res, next) => {
+    res.append('Access-Control-Allow-Origin', ['*'])
+    res.append('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
+    res.append('Access-Control-Allow-Headers', 'Content-Type')
+    next()
+})
+
+// Install a mod
+app.get(('/install/:modId'), (req, res) => {
+    const modId = req.params["modId"]
+    // Shell out to steamcmd, monitor the process, and display the output as it runs
+    res.send(modId + " was installed")
+})
+
+// Install base files
+app.get('/installbase', (req, res) => {
+    const ret = {
+        "message": "Base files were installed"
+    }
+    res.send(ret)
+})
+
+// Login to Steam
+app.post(('/login'), async (req, res) => {
+    const username = req.body?.username;
+    const password = req.body?.password;
+    const guard = req.body?.guard;
+    const remember = req.body?.remember;
+    let args = `+login "${username}" "${password}"`
+    if (guard) args += ` "${guard}"`
+    const result = await steamcmd(args)
+    console.log(result)
+    if (result) {
+        fs.writeFileSync(config.loginFile, username)
+        res.send(1)
+    } else {
+        res.send(0)
+    }
+})
 
 // Get mod metadata by ID
 app.get('/mod/:modId', (req, res) => {
@@ -224,6 +263,24 @@ app.get('/mod/:modId/:file', (req, res) => {
     }
 })
 
+/*
+ Get all mod metadata
+ */
+app.get('/mods', (req, res) => {
+    const mods = getMods()
+    const ret = {
+        "mods": mods
+    }
+    res.send(ret)
+})
+
+// Remove a mod
+app.get(('/remove/:modId'), (req, res) => {
+    const modId = req.params["modId"]
+    // Shell out to steamcmd, monitor the process, and display the output as it runs
+    res.send(modId + " was removed")
+})
+
 // Search for a mod
 app.get(('/search/:searchString'), (req, res) => {
     const searchString = req.params["searchString"]
@@ -241,59 +298,40 @@ app.get(('/search/:searchString'), (req, res) => {
     })
 })
 
-// Install a mod
-app.get(('/install/:modId'), (req, res) => {
-    const modId = req.params["modId"]
-    // Shell out to steamcmd, monitor the process, and display the output as it runs
-    res.send(modId + " was installed")
-})
-
-// Remove a mod
-app.get(('/remove/:modId'), (req, res) => {
-    const modId = req.params["modId"]
-    // Shell out to steamcmd, monitor the process, and display the output as it runs
-    res.send(modId + " was removed")
-})
-
-// Update base files
-app.get('/updatebase', (req, res) => {
-    login()
-    res.send("Base files were updates")
-})
-
-// Update mods
-app.get('/updatemods', (req, res) => {
-    res.send("Mod files were updates")
-})
-
 /*
  Get the status of things:
  If the base files are installed, the version of the server, the appid (If release or experimental)
  */
-app.get('/status', (req, res) => {
-    // FIXME Async/await this stuff...
+app.get('/status', (_, res) => {
     const installed = fs.existsSync(config.installFile)
-    const version = getVersion(installed)
+    const loggedIn = fs.existsSync(config.loginFile)
     const ret = {
         "appid": appid_version,
         "installed": installed,
-        "version": version
+        "loggedIn": loggedIn,
     }
-    ret.error = "This is a test error from the back end"
-    res.send(ret)
-})
-
-/*
- Get all mod metadata
- */
-app.get('/mods', (req, res) => {
-    const mods = getMods()
-    const ret = {
-        "mods": mods
+    if (installed) {
+        ret.version = getVersion()
     }
     res.send(ret)
 })
 
-app.listen(config.port, () => {
-    console.log(`Listening on port ${config.port}`)
+// Update base files
+app.get('/updatebase', (req, res) => {
+    res.send("Base files were updated")
 })
+
+// Update mods
+app.get('/updatemods', (req, res) => {
+    res.send("Mod files were updated")
+})
+
+ViteExpress.listen(app, config.port, () =>
+    console.log(`Server is listening on port ${config.port}`)
+)
+
+// const server = app.listen(config.port, "0.0.0.0", () =>
+//     console.log(`Server is listening on port ${config.port}`)
+// )
+//
+// ViteExpress.bind(app, server)

@@ -2,9 +2,9 @@
 import { config } from '@/config'
 import { BKMG } from '@/util'
 import { useFetch} from '@vueuse/core'
-import { useAppStore } from '@/stores/app.js'
+import { useAppStore } from '@/store.js'
 const store = useAppStore()
-const { data: searchResults, error, isFetching } = useFetch(() => config.baseUrl + `/search/${store.searchText}`, {
+const { data: searchResults, error, isFetching } = useFetch(() => `/search/${store.searchText}`, {
   immediate: false,
   refetch: true,
   afterFetch(response) {

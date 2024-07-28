@@ -1,17 +1,24 @@
 <script setup>
-import Body from '@/components/Body.vue'
 import Error from '@/components/Error.vue'
-import Header from '@/components/Header.vue'
+import Login from '@/components/Login.vue'
+import Main from '@/components/Main.vue'
+import { useFetch } from '@vueuse/core'
+import { useAppStore } from '@/store.js'
+const store = useAppStore()
+useFetch('/status', {
+	afterFetch(response) {
+		store.steamStatus = response.data
+		return response
+	}
+}).get().json()
 </script>
 
 <template>
   <Suspense>
     <main>
       <Error />
-      <div class="container-fluid min-vh-100 d-flex flex-column bg-light">
-        <Header />
-        <Body />
-      </div>
+			<Login v-if="! store.steamStatus.loggedIn" />
+      <Main v-else />
     </main>
   </Suspense>
 </template>

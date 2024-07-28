@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
 
+set -eE
+
+trap '
+	echo "Shutting down..."
+' SIGINT SIGTERM
+
 # Set PS1 so we know we're in the container
-if ! echo .bashrc | grep -q "dz-web"
+if grep -q "dz-web" .bashrc
 then
 	echo "Adding PS1 to .bashrc..."
-	cat > .bashrc <<EOF
+	cat >> .bashrc <<EOF
 alias ls='ls --color'
 export PS1="${debian_chroot:+($debian_chroot)}\u@dz-web:\w\$ "
 unset DEVELOPMENT
@@ -19,10 +25,6 @@ then
 fi
 
 cd /web
-npm i
-export DEBUG='express:*'
-npx nodemon web.js &
-
-cd docroot
-npm i
-exec npm run dev
+#export DEBUG=express:*
+npm run dev &
+wait $!

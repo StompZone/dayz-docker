@@ -6,7 +6,7 @@ import './css/index.css'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
-import {useAppStore} from "@/stores/app";
+import {useAppStore} from '@/store'
 
 // Create an instance of our Vue app
 const app = createApp(App)

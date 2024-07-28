@@ -1,12 +1,14 @@
 <script setup>
-import { onMounted } from 'vue'
+import { watch } from 'vue'
 import { Modal } from 'bootstrap'
-import { useAppStore } from '@/stores/app.js'
+import { useAppStore } from '@/store.js'
 const store = useAppStore()
 let modal = {}
-onMounted(() => {
+watch(() => store.errorText, () => {
   modal = new Modal('#errorModal', {})
-  // modal.show()
+	if (store.errorText) {
+		modal.show()
+	}
 })
 </script>
 

@@ -1,17 +1,17 @@
-import { fileURLToPath, URL } from 'node:url'
-
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-// https://vitejs.dev/config/
 export default defineConfig({
+  cacheDir: '/tmp/vite',
   plugins: [vue()],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': '/web/docroot/src'
     }
   },
   server: {
-    port: 8001
+    fs: {
+      allow: ['/node_modules', '/web']
+    }
   }
 })

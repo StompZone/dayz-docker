@@ -1,7 +1,7 @@
 <script setup>
 import { useFetch } from "@vueuse/core"
 import XmlFile from '@/components/XmlFile.vue'
-import { useAppStore } from '@/stores/app.js'
+import { useAppStore } from '@/store.js'
 const store = useAppStore()
 import { config } from '@/config'
 const { data, error } = useFetch(() => config.baseUrl + `/mod/${store.modId}`, {

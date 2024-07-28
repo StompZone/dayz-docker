@@ -33,7 +33,7 @@ RUN wget -q https://github.com/WoozyMasta/bercon/releases/download/1.0.0/bercon 
 # Install nodejs
 RUN mkdir /usr/local/nvm
 ENV NVM_DIR /usr/local/nvm
-ENV NODE_VERSION 20.15.1
+ENV NODE_VERSION 18.20.4
 
 # Install nvm with node and npm
 RUN wget -O - https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash \
@@ -109,7 +109,7 @@ ENV LC_ALL=en_US.UTF-8
 
 # This was installed in the download stage
 ENV NVM_DIR /usr/local/nvm
-ENV NODE_VERSION=20.15.1
+ENV NODE_VERSION=18.20.4
 
 ENV NODE_PATH=$NVM_DIR/versions/node/v$NODE_VERSION/lib/node_modules
 ENV PATH=$NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
@@ -120,6 +120,11 @@ ENV PATH=/usr/games:/files/bin:/web/bin:${PATH}
 
 # Shut steamcmd up
 RUN cd /usr/lib/i386-linux-gnu && ln -s /web/bin/steamservice.so
+
+# Install node modules
+COPY package* /
+
+RUN cd / && npm i
 
 # Setup a non-privileged user
 ARG USER_ID
@@ -136,5 +141,4 @@ USER user
 WORKDIR /home/user
 
 # Run the web server
-ENTRYPOINT ["entrypoint.sh"]
 CMD ["start.sh"]

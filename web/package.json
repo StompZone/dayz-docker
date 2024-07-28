@@ -4,16 +4,26 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "nodemon index.js -w index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "express": "^4.18.2"
-  },
   "type": "module",
   "devDependencies": {
-    "nodemon": "^2.0.22"
+    "@vitejs/plugin-vue": "^5.1.1",
+    "express": "^4.19.2",
+    "nodemon": "^3.1.4",
+    "vite": "^5.3.5",
+    "vite-express": "^0.17.0"
+  },
+  "dependencies": {
+    "@popperjs/core": "^2.11.8",
+    "@vueuse/core": "^10.11.0",
+    "bootstrap": "^5.3.3",
+    "bootstrap-icons": "^1.11.3",
+    "pinia": "^2.2.0",
+    "vue": "^3.4.34"
   }
 }

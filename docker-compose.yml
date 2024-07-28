@@ -2,149 +2,34 @@ volumes:
   # Only in the web container.
   # For steamcmd files and resource files used by the scripts.
   homedir_main:
+
   # Shared by all containers.
   # Mods.
   mods:
-  # Where the server files will be installed
+  # Server files
   serverfiles:
   # Upstream mission files
-  servermpmissions:
-  # Server-specific volumes
-  # For Steam, for now
-  homedir_server1:
-  homedir_server2:
-  homedir_server3:
-  # Server mission files
-  mpmissions1:
-  mpmissions2:
-  mpmissions3:
-  # Server profile files
-  profiles1:
-  profiles2:
-  profiles3:
+  mpmissions:
 
 services:
 
   web:
-    profiles:
-      - main
     build:
       context: web
       args:
         - USER_ID
     user: ${USER_ID}
+    hostname: web
     volumes:
       - homedir_main:/home/user
       - serverfiles:/serverfiles
-      - servermpmissions:/serverfiles/mpmissions
+      - mpmissions:/serverfiles/mpmissions
       - mods:/serverfiles/steamapps/workshop/content
       - mods:/mods
       - ./files:/files
       - ./web:/web
     ports:
-      - "8001:8001/tcp"
       - "8000:8000/tcp"
-    restart: always
-    env_file:
-      - .env
-
-  server-image:
-    &server-image
-    profiles:
-      - build
-    build:
-      context: server
-      args:
-        - USER_ID
-    image: server-image
-    pull_policy: never
-    env_file:
-      - .env
-
-  server1:
-    <<: *server-image
-    profiles:
-      - main
-    user: ${USER_ID}
-    volumes:
-      # Common volumes
-      - ./files:/files
-      - mods:/mods
-      - ./server:/server
-      - serverfiles:/serverfiles
-      - servermpmissions:/mpmissions:ro
-      # Server-specific volumes
-      - homedir_server1:/home/user
-      - mpmissions1:/serverfiles/mpmissions
-      - profiles1:/profiles
-    # To have the server show up in the LAN tab of the DayZ launcher,
-    # it must run under host mode.
-    network_mode: host
-    # The above is mutually exclusive with the below. If you don't need
-    # the server to show up on the LAN, comment out the network_mode above
-    # and uncomment the port mappings below.
-#    ports:
-#       # Game port
-#      - 2302:2302/udp
-#       # RCON port
-#      - 2303:2303/udp
-#       # Steam port
-#      - 27016:27016/udp
-    # The server script execs itself when the server exits, unless told not to by `dz stop`
     restart: no
-    # Allows attaching a debugger from the host
-#    cap_add:
-#      - SYS_PTRACE
-    # Allows core files to be created within the container. These are VERY LARGE! Enable only for debugging!
-    # One must also set the sysctl kernel.core_pattern parameter ON THE HOST to a path that is writable within the container. YMMV
-#    ulimits:
-#      core:
-#        soft: -1
-#        hard: -1
     env_file:
-      - .env1
-
-#  # Copy and paste this for every other server you want to run, replacing 2 with 3, and so on.
-#  server2: # <-- here
-#    build:
-#      context: server
-#      args:
-#        - USER_ID
-#    user: ${USER_ID}
-#    volumes:
-#      # Common volumes
-#      - ./files:/files
-#      - mods:/mods
-#      - ./server:/server
-#      - serverfiles:/serverfiles
-#      - servermpmissions:/mpmissions:ro
-#      # Server-specific volumes
-#      - homedir_server2:/home/user # <-- here
-#      - mpmissions2:/serverfiles/mpmissions # <-- here
-#      - profiles2:/profiles # <-- here
-#    network_mode: host
-#    restart: no
-#    env_file:
-#      - .env2 # <-- here
-#
-#  server3: # <-- here
-#    build:
-#      context: server
-#      args:
-#        - USER_ID
-#    user: ${USER_ID}
-#    volumes:
-#      # Common volumes
-#      - ./files:/files
-#      - mods:/mods
-#      - ./server:/server
-#      - serverfiles:/serverfiles
-#      - servermpmissions:/mpmissions:ro
-#      # Server-specific volumes
-#      - homedir_server3:/home/user # <-- here
-#      - mpmissions3:/serverfiles/mpmissions # <-- here
-#      - profiles3:/profiles # <-- here
-#    network_mode: host
-#    restart: no
-#    env_file:
-#      - .env3 # <-- here
+      - .env

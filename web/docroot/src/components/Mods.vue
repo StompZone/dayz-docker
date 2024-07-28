@@ -1,7 +1,7 @@
 <script setup>
 import { config } from '@/config'
 import { useFetch } from '@vueuse/core'
-import { useAppStore } from '@/stores/app.js'
+import { useAppStore } from '@/store.js'
 import ModInfo from '@/components/Modinfo.vue'
 const store = useAppStore()
 const { data, error } = useFetch(config.baseUrl + '/mods', {
@@ -17,7 +17,8 @@ const { data, error } = useFetch(config.baseUrl + '/mods', {
     <div v-if="error" class="row text-danger">
       {{ error }}
     </div>
-    <div class="col-md-3 border" v-if="data">
+		<div v-if="store.mods.length === 0">No mods are installed</div>
+    <div v-else class="col-md-3 border" v-if="data">
       <div>
         <h4 class="text-center">Installed Mods</h4>
         <table>
