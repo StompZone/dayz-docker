@@ -70,6 +70,9 @@ installxml(){
 					xmlstarlet ed -L -r "events" -v "eventposdef" /tmp/x
 				fi
 			fi
+			# Some mod authors ship invalid XML files. This fixes comments before the <?xml> declaration.
+			xmlstarlet ed -d '//comment()' /tmp/x > /tmp/y && mv /tmp/y /tmp/x
+			# Check for the required root node and add it if it's missing
       if ! grep -q '<'${CHECK}'>' /tmp/x
       then
         echo "  - has no root node <${CHECK}>. fixing..."

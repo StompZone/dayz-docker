@@ -2,3 +2,5 @@
 *.iml
 .env*
 node_modules/
+web/client/bin
+web/client/obj

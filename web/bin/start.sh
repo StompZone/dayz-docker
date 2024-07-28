@@ -8,6 +8,7 @@ then
 alias ls='ls --color'
 export PS1="${debian_chroot:+($debian_chroot)}\u@dz-web:\w\$ "
 unset DEVELOPMENT
+export PATH=${PATH}:/usr/local/dotnet
 EOF
 fi
 
