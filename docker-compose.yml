@@ -19,7 +19,7 @@ services:
       args:
         - USER_ID
     user: ${USER_ID}
-    hostname: web
+    hostname: dayzdockerserver
     volumes:
       - homedir_main:/home/user
       - serverfiles:/serverfiles

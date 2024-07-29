@@ -1,4 +1,5 @@
 <script setup>
+import Button from 'primevue/button'
 import { useAppStore } from '@/store.js'
 const store = useAppStore()
 </script>
@@ -6,18 +7,21 @@ const store = useAppStore()
 <template>
   <div class="col">
 		<div>
-			Logged into Steam:
-			<span v-if="store.steamStatus.loggedIn" class="bi bi-check h2 text-success"></span>
-			<span v-else class="bi bi-x h2 danger text-danger"></span>
+			{{ $t('Logged into Steam') }}:
+			<span v-if="store.steamStatus.loggedIn" class="pi pi-check" style="color: green"></span>
+			<span v-else class="pi pi-times" style="color: red"></span>
 		</div>
     <div>
-      Server files installed:
-      <span v-if="store.steamStatus.installed" class="bi bi-check h2 text-success"></span>
-      <span v-else class="bi bi-x h2 danger text-danger"></span>
+      {{ $t('Server files installed') }}:
+      <span v-if="store.steamStatus.installed" class="pi pi-check" style="color: green"></span>
+      <span v-else class="pi pi-times" style="color: red"></span>
     </div>
     <div v-if="store.steamStatus.version">
-      Version: <span class="text-success fw-bold">{{ store.steamStatus.version }}</span>
-      <span class="text-success fw-bold">({{ store.steamStatus.appid }})</span>
+      {{ $t('Version') }}: <span style="color: green;">{{ store.steamStatus.version }}</span>
+      <span class="bold">({{ store.steamStatus.appid }})</span>
     </div>
+		<div>
+			<Button @click="store.errorText = $t('This is an error message')">{{ $t('Test error') }}</Button>
+		</div>
   </div>
 </template>

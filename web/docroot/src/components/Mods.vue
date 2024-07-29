@@ -4,7 +4,7 @@ import { useFetch } from '@vueuse/core'
 import { useAppStore } from '@/store.js'
 import ModInfo from '@/components/Modinfo.vue'
 const store = useAppStore()
-const { data, error } = useFetch(config.baseUrl + '/mods', {
+const { data, error } = useFetch('/mods', {
   afterFetch(ctx) {
     store.mods = ctx.data.mods
     return ctx
@@ -13,14 +13,14 @@ const { data, error } = useFetch(config.baseUrl + '/mods', {
 </script>
 
 <template>
-  <div class="row flex-grow-1" v-if="store.section === 'mods'">
+  <div class="row flex-grow-1">
     <div v-if="error" class="row text-danger">
       {{ error }}
     </div>
-		<div v-if="store.mods.length === 0">No mods are installed</div>
+		<div v-if="store.mods.length === 0">{{ $t('No mods are installed') }}</div>
     <div v-else class="col-md-3 border" v-if="data">
       <div>
-        <h4 class="text-center">Installed Mods</h4>
+        <h4 class="text-center">{{ $t('Installed Mods') }}</h4>
         <table>
           <tr>
             <th>Steam Link</th>

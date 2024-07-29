@@ -1,7 +1,6 @@
 <script setup>
 import Error from '@/components/Error.vue'
-import Login from '@/components/Login.vue'
-import Main from '@/components/Main.vue'
+import Header from '@/components/Header.vue'
 import { useFetch } from '@vueuse/core'
 import { useAppStore } from '@/store.js'
 const store = useAppStore()
@@ -17,8 +16,7 @@ useFetch('/status', {
   <Suspense>
     <main>
       <Error />
-			<Login v-if="! store.steamStatus.loggedIn" />
-      <Main v-else />
+      <Header />
     </main>
   </Suspense>
 </template>

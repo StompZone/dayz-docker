@@ -229,13 +229,25 @@ app.post(('/login'), async (req, res) => {
     let args = `+login "${username}" "${password}"`
     if (guard) args += ` "${guard}"`
     const result = await steamcmd(args)
-    console.log(result)
+    if (remember) {
+        fs.writeFileSync(config.loginFile, username)
+    }
     if (result) {
         fs.writeFileSync(config.loginFile, username)
-        res.send(1)
+        res.send({"ok": 1})
     } else {
-        res.send(0)
+        res.send({"ok": 0})
     }
+})
+
+// Logout from Steam
+app.get(('/logout'), async (req, res) => {
+    fs.unlink(config.loginFile, (err) => {
+        if (err) {
+            return res.send({"ok": 0, "error:": err})
+        }
+        res.send({"ok": 1})
+    })
 })
 
 // Get mod metadata by ID
