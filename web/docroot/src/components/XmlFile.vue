@@ -1,10 +1,9 @@
 <script setup>
 import { useFetch } from '@vueuse/core'
-import { config } from '@/config'
 import { useAppStore } from '@/store.js'
 import XmlTree from '@/components/XmlTree.vue'
 const store = useAppStore()
-const { data, error } = await useFetch(() => config.baseUrl + `/mod/${store.modId}/${store.modFile}`, {
+const { data, error } = await useFetch(() => `/mod/${store.modId}/${store.modFile}`, {
   immediate: false,
   refetch: true,
   afterFetch(response) {

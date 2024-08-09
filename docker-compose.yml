@@ -1,13 +1,15 @@
 volumes:
   # Only in the web container.
   # For steamcmd files and resource files used by the scripts.
-  homedir_main:
+  homedir:
 
   # Shared by all containers.
   # Mods.
   mods:
-  # Server files
+  # Server files for release
   serverfiles:
+  # Server files for experimental
+  serverfiles_experimental:
   # Upstream mission files
   mpmissions:
 
@@ -21,8 +23,9 @@ services:
     user: ${USER_ID}
     hostname: dayzdockerserver
     volumes:
-      - homedir_main:/home/user
+      - homedir:/home/user
       - serverfiles:/serverfiles
+      - serverfiles_experimental:/serverfiles_experimental
       - mpmissions:/serverfiles/mpmissions
       - mods:/serverfiles/steamapps/workshop/content
       - mods:/mods

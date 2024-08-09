@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      '@': '/web/docroot/src'
+      '@': './web/docroot/src/'
     }
   },
   server: {

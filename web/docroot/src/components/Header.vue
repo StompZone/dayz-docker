@@ -48,3 +48,16 @@ import Status from '@/components/Status.vue'
 		</div>
 	</div>
 </template>
+
+<style>
+.p-tablist-tab-list {
+	display: flex;
+	justify-content: center;
+}
+.p-dialog-footer {
+	justify-content: center;
+}
+.p-dialog-header {
+	justify-content: center;
+}
+</style>

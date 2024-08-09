@@ -12,41 +12,7 @@ import path from 'path'
 import fs from 'fs'
 import https from 'https'
 import { spawn } from 'child_process'
-
-/*
- The DayZ server Steam app ID. USE ONE OR THE OTHER!!
-
- Presumably once the Linux server is officially released, the binaries will come from this ID.
- Meanwhile, if we have a release-compatible binary, the base files must be installed from this id,
- even if the server binary and required shared objects don't come from it. (They'd come from...elsewhere...)
- */
-const server_appid = "223350"
-
-/*
- Without a release binary, we must use the experimental server app ID.
- */
-// const server_appid = "1042420"
-
-/*
- DayZ release client Steam app ID. This is for mods, as only the release client has them.
- */
-const client_appid = "221100"
-
-/*
- Denote if it's release or experimental
- */
-const versions = {
-    "1042420": "Experimental",
-    "223350": "Release"
-}
-const appid_version = versions[server_appid]
-
-/*
- Base file locations
- */
-const modDir = "/mods"
-const serverFiles = "/serverfiles"
-const homeDir = "/home/user"
+import { config } from "./docroot/src/config.js";
 
 /*
  File path delimiter
@@ -106,14 +72,6 @@ const allConfigFiles = {
     ]
 }
 
-const config = {
-    installFile: serverFiles + "/DayZServer",
-    loginFile: homeDir + "/steamlogin",
-    modDir: modDir + "/" + client_appid,
-    port: 8000,
-    steamAPIKey: process.env["STEAMAPIKEY"]
-}
-
 const getVersion = () => {
     return "1.25.bogus"
 }
@@ -146,7 +104,7 @@ const getCustomXML = (modId) => {
 }
 
 const getModNameById = (id) => {
-    const files = fs.readdirSync(serverFiles, {encoding: 'utf8', withFileTypes: true})
+    const files = fs.readdirSync(config.serverFiles, {encoding: 'utf8', withFileTypes: true})
     for (const file of files) {
         if (file.isSymbolicLink()) {
             const sym = fs.readlinkSync(serverFiles + d + file.name)
@@ -166,28 +124,41 @@ const getMods = () => {
     return mods
 }
 
-const steamcmd = async (args) => {
-    let out = ''
-    let err = ''
-    const command = 'steamcmd +force_install_dir ' + serverFiles + ' ' + args + ' +quit'
-    // console.log(command)
-    const proc = spawn(command, {shell: true})
-    proc.stdout.on('data', (data) => {
-        // console.log("[OUT] " + data)
-        out += data + "\n"
-    })
-    proc.stderr.on('data', (data) => {
-        // console.log("[ERROR] " + data)
-        err += data + "\n"
-    })
-    proc.on('error', (error) => {
-        // console.log("[ERROR] " + error)
-        err += error + "\n"
-    })
-    proc.on('close', (error) => {
-        if(error) err += error
-        // console.log("Return")
-        return { out: out, err: err }
+const sendError = (res, message) => {
+    res.send({"errorCode": 42, "error": message})
+}
+
+const sendAlert = (res, message) => {
+    res.send({"alert": message})
+}
+
+const steamcmd = async (args, res) => {
+    return new Promise((resolve) => {
+        let stdout = ''
+        let stderr = ''
+        const command = 'steamcmd +force_install_dir ' + config.serverFiles + ' ' + args + ' +quit'
+        console.log(command)
+        const proc = spawn(command, {shell: true})
+        proc.stdout.on('data', (data) => {
+            const out  = "[OUT] " + data + "\n"
+            console.log(out)
+            res.write(out)
+            stdout += out
+        })
+        proc.stderr.on('data', (data) => {
+            const err = "[ERROR] " + data + "\n"
+            console.log(err)
+            stderr += err
+        })
+        proc.on('error', (data) => {
+            const err = "[ERROR] " + data + "\n"
+            console.log(err)
+            stderr += err
+        })
+        proc.on('close', (errorCode) => {
+            console.log("Close")
+            resolve({ out: stdout, err: stderr, errorCode: errorCode })
+        })
     })
 }
 
@@ -213,41 +184,56 @@ app.get(('/install/:modId'), (req, res) => {
 })
 
 // Install base files
-app.get('/installbase', (req, res) => {
-    const ret = {
-        "message": "Base files were installed"
+app.get('/installbase', async (req, res) => {
+    let which = req.query?.which
+    const username = fs.readFileSync(config.loginFile, 'utf8')
+    if (which === "experimental") {
+        which = config.experimental_server_appid
+    } else if (which === "stable") {
+        which = config.stable_server_appid
+    } else {
+        sendError(res, "Invalid base file type")
     }
-    res.send(ret)
+    let args = `+login "${username}" +app_update "${which}" validate`
+    const result = await steamcmd(args, res)
+    if (result.errorCode === 0) {
+    }
+    res.send(result)
 })
 
 // Login to Steam
 app.post(('/login'), async (req, res) => {
     const username = req.body?.username;
     const password = req.body?.password;
-    const guard = req.body?.guard;
+    const steamGuardCode = req.body?.steamGuardCode;
     const remember = req.body?.remember;
     let args = `+login "${username}" "${password}"`
-    if (guard) args += ` "${guard}"`
+    if (steamGuardCode) args += ` "${steamGuardCode}"`
     const result = await steamcmd(args)
-    if (remember) {
-        fs.writeFileSync(config.loginFile, username)
+    if (result.errorCode === 0) {
+        if (remember) {
+            console.log("Writing login file")
+            fs.writeFileSync(config.loginFile, username)
+        }
     }
-    if (result) {
-        fs.writeFileSync(config.loginFile, username)
-        res.send({"ok": 1})
-    } else {
-        res.send({"ok": 0})
-    }
+    res.append('Content-Type', 'application/json')
+    res.send(result)
 })
 
 // Logout from Steam
 app.get(('/logout'), async (req, res) => {
-    fs.unlink(config.loginFile, (err) => {
-        if (err) {
-            return res.send({"ok": 0, "error:": err})
-        }
-        res.send({"ok": 1})
-    })
+    let result = {"status": 304}
+    if (fs.existsSync(config.loginFile)) {
+        fs.unlinkSync(config.loginFile, (err) => {
+            if (err) {
+                result.status = 500
+                result.error = err
+            }
+            result.status = 200
+        })
+    }
+    res.append('Content-Type', 'application/json')
+    res.send(result)
 })
 
 // Get mod metadata by ID
@@ -296,7 +282,8 @@ app.get(('/remove/:modId'), (req, res) => {
 // Search for a mod
 app.get(('/search/:searchString'), (req, res) => {
     const searchString = req.params["searchString"]
-    const url = "https://api.steampowered.com/IPublishedFileService/QueryFiles/v1/?numperpage=1000&appid=221100&return_short_description=true&strip_description_bbcode=true&key=" + config.steamAPIKey + "&search_text=" + searchString
+    const url = config.searchUrl + searchString
+    // const url = "https://api.steampowered.com/IPublishedFileService/QueryFiles/v1/?numperpage=1000&appid=221100&return_short_description=true&strip_description_bbcode=true&key=" + config.steamAPIKey + "&search_text=" + searchString
     https.get(url, resp => {
         let data = '';
         resp.on('data', chunk => {
@@ -318,7 +305,7 @@ app.get('/status', (_, res) => {
     const installed = fs.existsSync(config.installFile)
     const loggedIn = fs.existsSync(config.loginFile)
     const ret = {
-        "appid": appid_version,
+        "appid": config.appid_version,
         "installed": installed,
         "loggedIn": loggedIn,
     }
@@ -326,6 +313,35 @@ app.get('/status', (_, res) => {
         ret.version = getVersion()
     }
     res.send(ret)
+})
+
+app.get('/test', async (req, res) => {
+    const type = req.query.type
+    if (type === "error") {
+        const ret = {
+            "errorCode": 42,
+            "alert": "This is a test server error",
+        }
+        res.send(ret)
+    } else if (type === "alert") {
+        const ret = {
+            "errorCode": 0,
+            "alert": "This is a test server alert",
+        }
+        res.send(ret)
+    } else if (type === "continuous") {
+        res.set('Content-Type', 'text/plain')
+        res.write("data: This is a test server continuous output 1\n")
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        res.write("data: This is a test server continuous output 2\n")
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        res.write("data: This is a test server continuous output 3 but it's a very long line intended to force wrapping of text because the length is so long and the girth is so gorth\n")
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        res.write("data: This is a test server continuous output 4\nDone!")
+        res.end()
+    } else {
+        res.send("Unknown test type")
+    }
 })
 
 // Update base files
@@ -341,9 +357,3 @@ app.get('/updatemods', (req, res) => {
 ViteExpress.listen(app, config.port, () =>
     console.log(`Server is listening on port ${config.port}`)
 )
-
-// const server = app.listen(config.port, "0.0.0.0", () =>
-//     console.log(`Server is listening on port ${config.port}`)
-// )
-//
-// ViteExpress.bind(app, server)
