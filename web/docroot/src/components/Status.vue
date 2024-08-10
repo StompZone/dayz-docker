@@ -21,14 +21,13 @@ const test = async (type) => {
 }
 
 const continuous = async () => {
-	store.setAlert('')
-	store.alertLoading = true
 	const url = '/test?type=continuous'
 	const response = await fetch(url)
+	store.setStream('')
 	for await (const chunk of response.body) {
-		store.alertText += new TextDecoder().decode(chunk)
+		store.setStream(new TextDecoder().decode(chunk), true)
 	}
-	store.alertLoading = false
+	store.setSteamLoading(false)
 }
 
 </script>
@@ -72,14 +71,14 @@ const continuous = async () => {
 	<div class="grid">
 		<div class="col-6 col-offset-3">
 			<div>
-				<Button @click="store.alertText = $t('This is an alert message')">{{ $t('Test alert') }}</Button>
+				<Button @click="store.setAlert($t('This is an alert message'))">{{ $t('Test alert') }}</Button>
 			</div>
 		</div>
 	</div>
 	<div class="grid">
 		<div class="col-6 col-offset-3">
 			<div>
-				<Button @click="store.errorText = $t('This is an error message')">{{ $t('Test error') }}</Button>
+				<Button @click="store.setError($t('This is an error message'))">{{ $t('Test error') }}</Button>
 			</div>
 		</div>
 	</div>

@@ -25,6 +25,7 @@ export const pt = {
     'Server files installed': 'Arquivos de servidor instalados',
     'Server files are installed': 'Arquivos de servidor estão instalados',
     'Server files were successfully installed': 'Arquivos de servidor foram instalados com sucesso',
+    'Server Output': 'Saída de servidor',
     'Servers': 'Servidores',
     'Stable': 'Estável',
     'Status': 'Estado',

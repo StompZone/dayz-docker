@@ -1,5 +1,5 @@
 <script setup>
-import Error from '@/components/Error.vue'
+import Dialog from '@/components/Dialog.vue'
 import Header from '@/components/Header.vue'
 import { useFetch } from '@vueuse/core'
 import { useAppStore } from '@/store.js'
@@ -15,7 +15,7 @@ useFetch('/status', {
 <template>
   <Suspense>
     <main>
-      <Error />
+      <Dialog />
       <Header />
     </main>
   </Suspense>

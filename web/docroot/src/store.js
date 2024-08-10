@@ -3,14 +3,11 @@ import { defineStore } from 'pinia'
 export const useAppStore = defineStore('app', {
     state: () => ({
         alert: false,
-        alertLoading: false,
         alertText: '',
         error: false,
         errorText: '',
-        loading: false,
         modId: 0,
         modFile: false,
-        messageText: false,
         mods: [],
         searchText: false,
         servers: [],
@@ -21,34 +18,35 @@ export const useAppStore = defineStore('app', {
             stableInstalled: false,
             version: ''
         },
+        stream: false,
+        streamLoading: false,
+        streamText: '',
     }),
     actions: {
-        setAlert(alertText, loading = false) {
+        setAlert(alertText) {
+            this.alertText = alertText
             this.alert = true
-            this.setAlertLoading(loading)
-            if (loading) {
-                this.alertText += alertText
+        },
+        setStream(streamText) {
+            this.stream = true
+            if (streamText) {
+                this.streamText += streamText
             } else {
-                this.alertText = alertText
+                this.streamText = ''
             }
         },
-        setAlertLoading(alertLoading) {
-            this.alertLoading = alertLoading
+        setStreamLoading(streamLoading) {
+            this.streamLoading = streamLoading
         },
         setError(error) {
-            this.error = error
-        },
-        setLoading(loading) {
-            this.loading = loading
+            this.errorText = error
+            this.error = true
         },
         setModId(modId) {
             this.modId = modId
         },
         setModFile(modFile) {
             this.modFile = modFile
-        },
-        setMessageText(messageText) {
-            this.messageText = messageText
         },
         setMods(mods) {
             this.mods = mods

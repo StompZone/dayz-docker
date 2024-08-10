@@ -16,9 +16,9 @@ const client_appid = 221100
 const serverFiles = "/serverfiles"
 const homeDir = "/home/user"
 
-const steamAPIKey = process?.env["STEAMAPIKEY"] || ""
-
-const searchUrl = "https://api.steampowered.com/IPublishedFileService/QueryFiles/v1/?numperpage=1000&appid=221100&return_short_description=true&strip_description_bbcode=true&key=" + steamAPIKey + "&search_text="
+// const steamAPIKey = process?.env["STEAMAPIKEY"] || ""
+//
+// const searchUrl = "https://api.steampowered.com/IPublishedFileService/QueryFiles/v1/?numperpage=1000&appid=221100&return_short_description=true&strip_description_bbcode=true&key=" + steamAPIKey + "&search_text="
 
 const config = {
     client_appid: client_appid,
@@ -27,7 +27,7 @@ const config = {
     loginFile: homeDir + "/steamlogin",
     modDir: "/mods/" + client_appid,
     port: 8000,
-    searchUrl: searchUrl,
+    // searchUrl: searchUrl,
     serverFiles: serverFiles,
     stable_server_appid: stable_server_appid,
     steamUrl: 'https://steamcommunity.com/sharedfiles/filedetails/?id=',

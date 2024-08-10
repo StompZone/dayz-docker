@@ -320,7 +320,7 @@ app.get('/test', async (req, res) => {
     if (type === "error") {
         const ret = {
             "errorCode": 42,
-            "alert": "This is a test server error",
+            "error": "This is a test server error",
         }
         res.send(ret)
     } else if (type === "alert") {
@@ -334,7 +334,7 @@ app.get('/test', async (req, res) => {
         res.write("data: This is a test server continuous output 1\n")
         await new Promise(resolve => setTimeout(resolve, 1000));
         res.write("data: This is a test server continuous output 2\n")
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 2000));
         res.write("data: This is a test server continuous output 3 but it's a very long line intended to force wrapping of text because the length is so long and the girth is so gorth\n")
         await new Promise(resolve => setTimeout(resolve, 1000));
         res.write("data: This is a test server continuous output 4\nDone!")

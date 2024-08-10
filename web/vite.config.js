@@ -1,12 +1,13 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import path from 'path'
 
 export default defineConfig({
   cacheDir: '/tmp/vite',
   plugins: [vue()],
   resolve: {
     alias: {
-      '@': './web/docroot/src/'
+      '@': path.resolve(__dirname, "./docroot/src/"),
     }
   },
   server: {

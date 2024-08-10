@@ -25,6 +25,7 @@ export const en = {
     'Server files installed': 'Server files installed',
     'Server files are installed': 'Server files are installed',
     'Server files were successfully installed': 'Server files were successfully installed',
+    'Server Output': 'Server Output',
     'Servers': 'Servers',
     'Stable': 'Stable',
     'Status': 'Status',
