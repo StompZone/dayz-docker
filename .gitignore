@@ -1,6 +1,7 @@
 .idea
 *.iml
 .env*
+env.json
 node_modules/
 web/client/bin
 web/client/obj

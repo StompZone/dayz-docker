@@ -23,11 +23,11 @@ const test = async (type) => {
 const continuous = async () => {
 	const url = '/test?type=continuous'
 	const response = await fetch(url)
-	store.setStream('')
+	store.setStreamLoading(true)
 	for await (const chunk of response.body) {
 		store.setStream(new TextDecoder().decode(chunk), true)
 	}
-	store.setSteamLoading(false)
+	store.setStreamLoading(false)
 }
 
 </script>
@@ -46,7 +46,7 @@ const continuous = async () => {
 		<div class="col-6 col-offset-3">
 			<div>
 				{{ $t('Stable Server files installed') }}:
-				<span v-if="store.steamStatus.stableInstalled" class="pi pi-check" style="color: green"></span>
+				<span v-if="store.steamStatus.installed['stable']" class="pi pi-check" style="color: green"></span>
 				<span v-else class="pi pi-times" style="color: red"></span>
 			</div>
 		</div>
@@ -55,15 +55,15 @@ const continuous = async () => {
 		<div class="col-6 col-offset-3">
 			<div>
 				{{ $t('Experimental Server files installed') }}:
-				<span v-if="store.steamStatus.experimentalInstalled" class="pi pi-check" style="color: green"></span>
+				<span v-if="store.steamStatus.installed['experimental']" class="pi pi-check" style="color: green"></span>
 				<span v-else class="pi pi-times" style="color: red"></span>
 			</div>
 		</div>
 	</div>
 	<div class="grid">
 		<div class="col-6 col-offset-3">
-			<div v-if="store.steamStatus.version">
-				{{ $t('Version') }}: <span style="color: green;">{{ store.steamStatus.version }}</span>
+			<div v-if="store.steamStatus.version_stable">
+				{{ $t('Version') }}: <span style="color: green;">{{ store.steamStatus.version_stable }}</span>
 				<span class="bold">({{ store.steamStatus.appid }})</span>
 			</div>
 		</div>

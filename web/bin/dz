@@ -180,7 +180,8 @@ login(){
 dologin(){
 	if [ -f "${STEAM_LOGIN}" ]
 	then
-		source "${STEAM_LOGIN}"
+		echo "Logging in to Steam"
+		steamlogin=$(cat ${STEAM_LOGIN})
 	else
 		echo "No cached Steam credentials. Please configure this now: "
 		login
@@ -189,9 +190,16 @@ dologin(){
 
 # Perform the installation of the server files.
 install(){
-	if [ ! -f "${SERVER_INSTALL_FILE}" ] || [[ ${1} = "force" ]]
+	WHICH=${1}
+	if [[ ${WHICH} = "experimental" ]]
 	then
-		printf "[ ${yellow}DayZ${default} ] Downloading DayZ Server-Files!\n"
+		SERVER_FILES=${SERVER_FILES_EXPERIMENTAL}
+		SERVER_INSTALL_FILE="${SERVER_FILES}/DayZServer"
+		release_server_appid=${experimental_server_appid}
+	fi
+	if [ ! -f "${SERVER_INSTALL_FILE}" ] || [[ ${2} = "force" ]]
+	then
+		printf "[ ${yellow}DayZ${default} ] Downloading ${WHICH} DayZ Server-Files!\n"
 		dologin
 		${STEAMCMD} +force_install_dir ${SERVER_FILES} +login "${steamlogin}" +app_update "${release_server_appid}" validate +quit
 		# This installs the mpmissions for charnarusplus and enoch (AKA Livonia) from github. The game once allowed the full server
@@ -199,7 +207,7 @@ install(){
 		echo "Installing mpmissions for ChernarusPlus and Livonia from github..."
 		map default
 	else
-		printf "[ ${lightblue}DayZ${default} ] The server is already installed.\n"
+		printf "[ ${lightblue}DayZ${default} ] The ${WHICH} server is already installed.\n"
 	fi
 }
 
@@ -341,8 +349,6 @@ xml(){
   installxml ${1}
 }
 
-# Capture the first argument and shift it off so we can pass $@ to every function
-C=${1}
 shift || {
 	usage
 }

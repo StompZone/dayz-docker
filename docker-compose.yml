@@ -12,6 +12,7 @@ volumes:
   serverfiles_experimental:
   # Upstream mission files
   mpmissions:
+  mpmissions_experimental:
 
 services:
 
@@ -27,6 +28,7 @@ services:
       - serverfiles:/serverfiles
       - serverfiles_experimental:/serverfiles_experimental
       - mpmissions:/serverfiles/mpmissions
+      - mpmissions_experimental:/serverfiles_experimental/mpmissions
       - mods:/serverfiles/steamapps/workshop/content
       - mods:/mods
       - ./files:/files

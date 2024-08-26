@@ -12,7 +12,7 @@ import path from 'path'
 import fs from 'fs'
 import https from 'https'
 import { spawn } from 'child_process'
-import { config } from "./docroot/src/config.js";
+import { config } from './docroot/src/config.js'
 
 /*
  File path delimiter
@@ -94,9 +94,9 @@ const getDirSize = (dirPath) => {
 
 const getCustomXML = (modId) => {
     const ret = []
-    if (! fs.existsSync(config.modDir)) return ret
+    if (! fs.existsSync(config.mod_dir)) return ret
     for(const file of configFiles) {
-        if (fs.existsSync(config.modDir + d + modId + d + file)) {
+        if (fs.existsSync(config.mod_dir + d + modId + d + file)) {
             ret.push({name:file})
         }
     }
@@ -104,7 +104,7 @@ const getCustomXML = (modId) => {
 }
 
 const getModNameById = (id) => {
-    const files = fs.readdirSync(config.serverFiles, {encoding: 'utf8', withFileTypes: true})
+    const files = fs.readdirSync(config.server_files, {encoding: 'utf8', withFileTypes: true})
     for (const file of files) {
         if (file.isSymbolicLink()) {
             const sym = fs.readlinkSync(serverFiles + d + file.name)
@@ -116,8 +116,8 @@ const getModNameById = (id) => {
 
 const getMods = () => {
     const mods = []
-    if (! fs.existsSync(config.modDir)) return mods
-    fs.readdirSync(config.modDir).forEach(file => {
+    if (! fs.existsSync(config.mod_dir)) return mods
+    fs.readdirSync(config.mod_dir).forEach(file => {
         const name = getModNameById(file)
         mods.push({name:name,id:file})
     })
@@ -132,26 +132,27 @@ const sendAlert = (res, message) => {
     res.send({"alert": message})
 }
 
-const steamcmd = async (args, res) => {
+const cmd = async (command, args, res) => {
     return new Promise((resolve) => {
         let stdout = ''
         let stderr = ''
-        const command = 'steamcmd +force_install_dir ' + config.serverFiles + ' ' + args + ' +quit'
-        console.log(command)
-        const proc = spawn(command, {shell: true})
+        const re = /(\u001b\[.*?m)/g
+        console.log(command, args)
+        const proc = spawn(command, args)
         proc.stdout.on('data', (data) => {
-            const out  = "[OUT] " + data + "\n"
+            const out  = "[OUT] " + data.toString().replace(re,'') + "\n"
             console.log(out)
             res.write(out)
             stdout += out
         })
         proc.stderr.on('data', (data) => {
-            const err = "[ERROR] " + data + "\n"
+            const err = "[ERROR] " + data.toString().replace(re,'') + "\n"
+            res.write(err)
             console.log(err)
             stderr += err
         })
         proc.on('error', (data) => {
-            const err = "[ERROR] " + data + "\n"
+            const err = "[ERROR] " + data.toString().replace(re,'') + "\n"
             console.log(err)
             stderr += err
         })
@@ -162,6 +163,14 @@ const steamcmd = async (args, res) => {
     })
 }
 
+const steamcmd = async (args, which, res) => {
+    return await cmd('steamcmd', [ '+force_install_dir', config.server_files[which] ].concat(args).concat("+quit"), res)
+}
+
+const dz = async (args, res) => {
+    return cmd('dz', args, res)
+}
+
 const app = express()
 
 app.use(express.json())
@@ -170,35 +179,29 @@ app.use(express.urlencoded({extended: true}))
 app.disable('etag')
 
 app.use((req, res, next) => {
-    res.append('Access-Control-Allow-Origin', ['*'])
+    res.append('Access-Control-Allow-Origin', '*')
     res.append('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
     res.append('Access-Control-Allow-Headers', 'Content-Type')
     next()
 })
 
 // Install a mod
-app.get(('/install/:modId'), (req, res) => {
+app.get(('/install/mod/:modId'), async (req, res) => {
     const modId = req.params["modId"]
     // Shell out to steamcmd, monitor the process, and display the output as it runs
-    res.send(modId + " was installed")
+    await dz('a', [ modId ], res)
+    res.end()
 })
 
 // Install base files
-app.get('/installbase', async (req, res) => {
-    let which = req.query?.which
-    const username = fs.readFileSync(config.loginFile, 'utf8')
-    if (which === "experimental") {
-        which = config.experimental_server_appid
-    } else if (which === "stable") {
-        which = config.stable_server_appid
-    } else {
-        sendError(res, "Invalid base file type")
-    }
-    let args = `+login "${username}" +app_update "${which}" validate`
-    const result = await steamcmd(args, res)
-    if (result.errorCode === 0) {
-    }
-    res.send(result)
+app.get('/install/server/:which', async (req, res) => {
+    const which = req.params["which"]
+    const appid = config.appid[which]
+    const username = fs.readFileSync(config.login_file, 'utf8')
+    let args = ['+login', username, '+app_update', appid, 'validate']
+    const result = await steamcmd(args, which, res)
+    res.write(JSON.stringify(result))
+    res.end()
 })
 
 // Login to Steam
@@ -207,39 +210,40 @@ app.post(('/login'), async (req, res) => {
     const password = req.body?.password;
     const steamGuardCode = req.body?.steamGuardCode;
     const remember = req.body?.remember;
-    let args = `+login "${username}" "${password}"`
-    if (steamGuardCode) args += ` "${steamGuardCode}"`
-    const result = await steamcmd(args)
+    let args = ['+login', username, password ]
+    if (steamGuardCode) args.push(steamGuardCode)
+    const result = await steamcmd(args, 'stable', res)
     if (result.errorCode === 0) {
         if (remember) {
             console.log("Writing login file")
-            fs.writeFileSync(config.loginFile, username)
+            fs.writeFileSync(config.login_file, username)
+        } else {
+            console.log("Not writing login file")
         }
     }
-    res.append('Content-Type', 'application/json')
-    res.send(result)
+    res.write(JSON.stringify(result))
+    res.end()
 })
 
 // Logout from Steam
 app.get(('/logout'), async (req, res) => {
-    let result = {"status": 304}
-    if (fs.existsSync(config.loginFile)) {
-        fs.unlinkSync(config.loginFile, (err) => {
+    let result = {"errorCode": 0}
+    if (fs.existsSync(config.login_file)) {
+        fs.rmSync('/home/user/.local/share/Steam/userdata', { recursive: true, force: true })
+        fs.unlinkSync(config.login_file, (err) => {
             if (err) {
-                result.status = 500
+                result.errorCoder = 1
                 result.error = err
             }
-            result.status = 200
         })
     }
-    res.append('Content-Type', 'application/json')
     res.send(result)
 })
 
 // Get mod metadata by ID
 app.get('/mod/:modId', (req, res) => {
     const modId = req.params["modId"]
-    const modDir = config.modDir + d + modId
+    const modDir = config.mod_dir + d + modId
     const customXML = getCustomXML(modId)
     const ret = {
         id: modId,
@@ -254,8 +258,8 @@ app.get('/mod/:modId', (req, res) => {
 app.get('/mod/:modId/:file', (req, res) => {
     const modId = req.params["modId"]
     const file = req.params["file"]
-    if (fs.existsSync(config.modDir + d + modId + d + file)) {
-        const contents = fs.readFileSync(config.modDir + d + modId + d + file)
+    if (fs.existsSync(config.mod_dir + d + modId + d + file)) {
+        const contents = fs.readFileSync(config.mod_dir + d + modId + d + file)
         res.set('Content-type', 'application/xml')
         res.send(contents)
     }
@@ -282,8 +286,7 @@ app.get(('/remove/:modId'), (req, res) => {
 // Search for a mod
 app.get(('/search/:searchString'), (req, res) => {
     const searchString = req.params["searchString"]
-    const url = config.searchUrl + searchString
-    // const url = "https://api.steampowered.com/IPublishedFileService/QueryFiles/v1/?numperpage=1000&appid=221100&return_short_description=true&strip_description_bbcode=true&key=" + config.steamAPIKey + "&search_text=" + searchString
+    const url = config.search_url + searchString
     https.get(url, resp => {
         let data = '';
         resp.on('data', chunk => {
@@ -302,15 +305,19 @@ app.get(('/search/:searchString'), (req, res) => {
  If the base files are installed, the version of the server, the appid (If release or experimental)
  */
 app.get('/status', (_, res) => {
-    const installed = fs.existsSync(config.installFile)
-    const loggedIn = fs.existsSync(config.loginFile)
     const ret = {
-        "appid": config.appid_version,
-        "installed": installed,
-        "loggedIn": loggedIn,
+        "appid": config.version['stable'],
+        "installed": {
+            "experimental": fs.existsSync(config.install_file['experimental']),
+            "stable": fs.existsSync(config.install_file['stable']),
+        },
+        "loggedIn": fs.existsSync(config.login_file),
     }
-    if (installed) {
-        ret.version = getVersion()
+    if (ret.installed.stable) {
+        ret.version = {
+            stable: getVersion('stable'),
+            experimental: getVersion('experimental')
+        }
     }
     res.send(ret)
 })
@@ -331,27 +338,27 @@ app.get('/test', async (req, res) => {
         res.send(ret)
     } else if (type === "continuous") {
         res.set('Content-Type', 'text/plain')
-        res.write("data: This is a test server continuous output 1\n")
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        res.write("data: This is a test server continuous output 2\n")
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        res.write("data: This is a test server continuous output 3 but it's a very long line intended to force wrapping of text because the length is so long and the girth is so gorth\n")
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        res.write("data: This is a test server continuous output 4\nDone!")
+        res.write("This is a test server continuous output 1\n")
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        res.write("This is a test server continuous output 2\n")
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        res.write("This is a test server continuous output 3 but it's a very long line intended to force wrapping of text because the length is so long and the girth is so gorth\n")
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        res.write("This is a test server continuous output 4\n")
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        res.write("This is a test server continuous output 5 with a whole SHIT TON of text! Lorem ipsum ain't got nothing on this! Hell yeah! Let's add a lot\nof\n\nnewlines and ellipses and other garbage...\nthis and that...and the other!\nLet's keep pushing this down...WAY DOWN...\nDOWN\nDOWN\nDOWN...\n\n...")
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        res.write("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean lacinia tristique porta. Integer luctus dui non augue egestas, vitae faucibus massa placerat. In ornare sodales risus quis faucibus. Cras viverra mauris vel neque sollicitudin pretium. Integer quis consectetur purus. Nulla sed accumsan tortor. Nulla felis eros, egestas quis eros ut, hendrerit aliquam ante. Nulla sagittis tortor nulla, eu consectetur tellus tempus eget. In hac habitasse platea dictumst. Mauris interdum cursus massa ac vestibulum. Morbi sodales justo sed feugiat consequat. Nunc purus nibh, faucibus id porttitor eget, dignissim eu purus. Duis efficitur varius libero vitae tristique. Mauris libero dolor, tempor at sagittis in, malesuada auctor sapien. Nulla eu accumsan odio. Phasellus dapibus dictum nulla ac feugiat.\n")
+        await new Promise(resolve => setTimeout(resolve, 500))
+        res.write("Pellentesque at massa vel eros auctor fringilla. Vestibulum at molestie augue. Proin dictum, tortor quis efficitur finibus, tortor nisi viverra libero, eget placerat lectus dolor a felis. Pellentesque vitae felis vulputate enim feugiat rutrum. Pellentesque auctor tempor eros sed consectetur. Integer id pellentesque massa, quis suscipit nisi. Fusce tempor cursus nulla nec imperdiet. Phasellus sodales iaculis eros, sed auctor lacus elementum vitae. Sed efficitur condimentum risus. Cras varius risus at quam condimentum, vitae cursus leo facilisis. Suspendisse pellentesque erat leo, a cursus augue blandit sed. Aliquam quis nibh vel sapien pulvinar feugiat quis eu diam. Pellentesque ullamcorper vestibulum leo non imperdiet.\n")
+        await new Promise(resolve => setTimeout(resolve, 500))
+        res.write("In et nulla risus. Fusce luctus ligula vitae velit lacinia egestas. Nullam semper, nisl vel ultrices semper, magna sem vestibulum ipsum, in pulvinar elit diam ac odio. Etiam id laoreet odio, a vehicula est. Sed luctus lobortis sollicitudin. Morbi hendrerit erat vel lacus pellentesque, eget pretium nisi faucibus. Nunc a orci sed mauris commodo cursus. Morbi at ipsum fermentum, placerat felis at, porta felis. Pellentesque sit amet sollicitudin est, aliquet consequat tortor. Cras efficitur egestas pulvinar. Morbi ultrices, ligula ac luctus ullamcorper, risus metus hendrerit eros, et ultricies diam justo eget lorem. Duis varius pulvinar nulla a luctus. Curabitur sed quam cursus risus pellentesque dignissim id vel arcu.\n")
+        await new Promise(resolve => setTimeout(resolve, 500))
+        res.write("This is a test server continuous output 5 with a whole SHIT TON of text! Lorem ipsum ain't got nothing on this! Hell yeah! Let's add a lot\nof\n\nnewlines and ellipses and other garbage...\nthis and that...and the other!\nLet's keep pushing this down...WAY DOWN...\nDOWN\nDOWN\nDOWN...\n\n...\n\nDone!")
         res.end()
     } else {
         res.send("Unknown test type")
     }
-})
-
-// Update base files
-app.get('/updatebase', (req, res) => {
-    res.send("Base files were updated")
-})
-
-// Update mods
-app.get('/updatemods', (req, res) => {
-    res.send("Mod files were updated")
 })
 
 ViteExpress.listen(app, config.port, () =>

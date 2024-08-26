@@ -131,8 +131,10 @@ ARG USER_ID
 
 RUN groupadd -g ${USER_ID} user && \
     useradd -l -u ${USER_ID} -m -g user user && \
-    mkdir -p /home/user /serverfiles/mpmissions /serverfiles/steamapps/workshop/content /web && \
-    chown -R user:user /home/user /serverfiles /web
+    mkdir -p /home/user \
+      /serverfiles/mpmissions /serverfiles/steamapps/workshop/content \
+      /serverfiles_experimental/mpmissions /serverfiles_experimental/steamapps/workshop/content /web && \
+    chown -R user:user /home/user /serverfiles /serverfiles_experimental /web
 
 # Use our non-privileged user
 USER user

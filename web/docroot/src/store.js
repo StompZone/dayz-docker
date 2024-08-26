@@ -9,14 +9,19 @@ export const useAppStore = defineStore('app', {
         modId: 0,
         modFile: false,
         mods: [],
-        searchText: false,
+        search: false,
+        searchText: '',
         servers: [],
         steamStatus: {
-            appid: 0,
-            experimentalInstalled: false,
+            installed: {
+                experimental: false,
+                stable: false,
+            },
             loggedIn: false,
-            stableInstalled: false,
-            version: ''
+            version: {
+                stable: '',
+                experimental: '',
+            }
         },
         stream: false,
         streamLoading: false,
@@ -28,15 +33,14 @@ export const useAppStore = defineStore('app', {
             this.alert = true
         },
         setStream(streamText) {
-            this.stream = true
-            if (streamText) {
-                this.streamText += streamText
-            } else {
-                this.streamText = ''
-            }
+            this.streamText += streamText
         },
         setStreamLoading(streamLoading) {
+            this.stream = true
             this.streamLoading = streamLoading
+            if (streamLoading) {
+                this.streamText = ''
+            }
         },
         setError(error) {
             this.errorText = error
