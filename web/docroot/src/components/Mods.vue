@@ -1,4 +1,5 @@
 <script setup>
+import Search from '@/components/Search.vue'
 import { config } from '@/config'
 import { useFetch } from '@vueuse/core'
 import { useAppStore } from '@/store.js'
@@ -17,6 +18,12 @@ const { data, error } = useFetch('/mods', {
     <div v-if="error" class="row text-danger">
       {{ error }}
     </div>
+		<div v-if="! store.steamStatus.loggedIn" class="grid">
+			<div class="col-4 col-offset-4 text-center">{{ $t('Not logged in to steam') }}</div>
+		</div>
+		<div v-else class="grid">
+			<Search />
+		</div>
 		<div v-if="store.mods.length === 0">{{ $t('No mods are installed') }}</div>
     <div v-else class="col-md-3 border" v-if="data">
       <div>

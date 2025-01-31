@@ -4,10 +4,10 @@ const store = useAppStore()
 </script>
 
 <template>
-	<div v-if="store.servers.length > 0">
-		<h1>{{ $t('Servers') }}</h1>
-	</div>
-	<div v-else>
+	<div v-if="store.servers.length === 0">
 		{{ $t('No servers have been created') }}
+	</div>
+	<div>
+		Add a server:
 	</div>
 </template>
