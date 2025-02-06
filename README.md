@@ -26,8 +26,8 @@ Ensure [Docker](https://docs.docker.com/engine/install/) and [Docker compose](ht
 Clone the repo, and change into the newly created directory:
 
 ```shell
-git clone https://ceregatti.org/git/daniel/dayzdockerserver.git
-cd dayzdockerserver
+git clone https://github.com/StompZone/dayz-docker.git
+cd dayz-docker
 ```
 
 Create a `.env` file that contains your user id. Usually the `${UID}` shell variable has this:
